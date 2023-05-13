@@ -26,10 +26,12 @@ export default function App(): ReactElement {
 
   const [{ status, error }, actions] = useAsync(async (file: File) => {
     setCheckForImages(true);
-    await extractImagesFromVideo(ffmpeg, file);
+    await extractImagesFromVideo(ffmpeg, file, method);
 
     $isDoneLoading.current = true;
   });
+
+  const [method, setMethod] = useState<"dominant" | "average">("dominant");
 
   const [lastImage, setLastImage] = useState<string>("");
   const [canvasWidth, setCanvasWidth] = useState<number>(MIN_WIDTH);
@@ -59,7 +61,7 @@ export default function App(): ReactElement {
 
         for (const imageName of images) {
           const imageData = ffmpeg.FS("readFile", imageName);
-          const color = await extractColorFromImage(imageData.buffer);
+          const color = await extractColorFromImage(imageData.buffer, method);
 
           ctx.fillStyle = color;
           ctx.fillRect($offset.current!, 0, 1, 100);
@@ -86,6 +88,9 @@ export default function App(): ReactElement {
         if ($isDoneLoading.current) {
           setCheckForImages(false);
           setLastImage("");
+          setCanvasWidth($offset.current);
+          $offset.current = 0;
+          $isDoneLoading.current = false;
         }
       })();
     },
@@ -98,6 +103,14 @@ export default function App(): ReactElement {
         <h1 className="text-9xl font-black">Your movies in lines</h1>
         <p className="text-lg">See how your movies look like in lines</p>
       </div>
+      <select
+        className="text-xl bg-blue-500 text-white px-5 py-2 rounded-xl"
+        value={method}
+        onChange={(event) => setMethod(event.target.value as any)}
+      >
+        <option value="dominant">Dominant</option>
+        <option value="average">Average</option>
+      </select>
       {status === "loading" ? (
         <p>{(progress * 100).toFixed(2)}%</p>
       ) : (
