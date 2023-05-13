@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    color: white;
+    background-color: #020D28;
+    /* linear gradient from top left to bottom right */
+    background: linear-gradient(
+            45deg,
+            #020D28,
+            #020524
+    );
+}
