@@ -1,5 +1,12 @@
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { useAsync, useIntervalEffect } from "@react-hookz/web";
+import {
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useAsync, useIntervalEffect, useUpdateEffect } from "@react-hookz/web";
 import extractImagesFromVideo from "./utils/extract-images-from-video";
 import extractColorFromImage from "./utils/extract-color-from-image";
 import { MdComputer, MdLock } from "react-icons/md";
@@ -9,6 +16,7 @@ const MIN_WIDTH = 1200;
 
 export default function App(): ReactElement {
   const $isDoneLoading = useRef<boolean>(false);
+  const $canvasData = useRef<ImageData>();
   const [checkForImages, setCheckForImages] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const ffmpeg = useMemo(
@@ -69,6 +77,9 @@ export default function App(): ReactElement {
           $offset.current += 1;
         }
 
+        $canvasData.current = ctx.getImageData(0, 0, $offset.current, 100);
+        setCanvasWidth($offset.current * 3.5);
+
         const lastImagePath = URL.createObjectURL(
           new Blob([ffmpeg.FS("readFile", images[images.length - 1])])
         );
@@ -77,10 +88,6 @@ export default function App(): ReactElement {
         // Clean up images to free up memory
         for (const imageName of images) {
           ffmpeg.FS("unlink", imageName);
-        }
-
-        if ($offset.current >= canvasWidth) {
-          setCanvasWidth($offset.current);
         }
 
         $lockPainting.current = false;
@@ -96,6 +103,17 @@ export default function App(): ReactElement {
     },
     checkForImages ? 5000 : undefined
   );
+
+  // Redraw canvas when canvasWidth changes
+  useUpdateEffect(() => {
+    if (!$canvasData.current) {
+      return;
+    }
+
+    const ctx = $canvas.current!.getContext("2d")!;
+    ctx.clearRect(0, 0, canvasWidth, 100);
+    ctx.putImageData($canvasData.current!, 0, 0);
+  }, [canvasWidth]);
 
   return (
     <main className="flex h-screen flex-col items-center justify-evenly">
