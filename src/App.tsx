@@ -118,7 +118,7 @@ export default function App(): ReactElement {
   return (
     <main className="flex h-screen flex-col items-center justify-evenly">
       <div className="flex flex-col items-center gap-y-5">
-        <h1 className="text-9xl font-black">Your movies in lines</h1>
+        <h1 className="text-9xl font-black">Your movie in lines</h1>
         <p className="text-lg">See how your movies look like in lines</p>
       </div>
       <select
